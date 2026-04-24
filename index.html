@@ -1,0 +1,700 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>@성셈의 종합부동산세 계산기</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;500;700;900&display=swap" rel="stylesheet">
+<style>
+:root{--c1:#ff6b35;--g1:linear-gradient(135deg,#ff6b35,#f7941d,#ffd166);--g2:linear-gradient(135deg,#06d6a0,#118ab2);--g3:linear-gradient(135deg,#7b2d8b,#c2185b);--g4:linear-gradient(135deg,#1a936f,#06d6a0);--bg:#0d0d1e;--card:rgba(255,255,255,0.05);--border:rgba(255,255,255,0.1);--muted:rgba(255,255,255,0.4);--r:18px}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Noto Sans KR',sans-serif;background:var(--bg);min-height:100vh;color:#fff;overflow-x:hidden}
+.bg{position:fixed;inset:0;pointer-events:none;z-index:0;overflow:hidden}
+.bg::before{content:'';position:absolute;width:700px;height:700px;background:radial-gradient(circle,rgba(255,107,53,.2)0%,transparent 65%);top:-250px;right:-200px;border-radius:50%}
+.bg::after{content:'';position:absolute;width:500px;height:500px;background:radial-gradient(circle,rgba(6,214,160,.15)0%,transparent 65%);bottom:-200px;left:-150px;border-radius:50%}
+.wrap{position:relative;z-index:1;max-width:720px;margin:0 auto;padding:20px 14px 60px}
+.hd{text-align:center;padding:36px 16px 28px}
+.hd .badge{display:inline-flex;align-items:center;background:rgba(255,107,53,.15);border:1px solid rgba(255,107,53,.3);color:#ff9562;font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;padding:5px 14px;border-radius:20px;margin-bottom:14px}
+.hd h1{font-size:clamp(20px,5vw,30px);font-weight:900;background:var(--g1);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;line-height:1.25;margin-bottom:8px}
+.hd p{font-size:12px;color:var(--muted)}
+.card{background:var(--card);backdrop-filter:blur(16px);border:1px solid var(--border);border-radius:var(--r);padding:22px;margin-bottom:14px;position:relative;overflow:hidden}
+.card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:var(--g1)}
+.card.g2::before{background:var(--g2)}.card.g3::before{background:var(--g3)}.card.g4::before{background:var(--g4)}
+.ctitle{font-size:10px;font-weight:700;color:var(--muted);letter-spacing:.12em;text-transform:uppercase;margin-bottom:18px;display:flex;align-items:center;gap:7px}
+.ctitle .dot{width:7px;height:7px;border-radius:50%;background:var(--g1);flex-shrink:0}
+.card.g2 .dot{background:var(--g2)}.card.g3 .dot{background:var(--g3)}.card.g4 .dot{background:var(--g4)}
+.frow{display:flex;align-items:center;gap:10px;margin-bottom:12px}
+.frow label{font-size:13px;color:rgba(255,255,255,.85);min-width:155px;flex-shrink:0;line-height:1.4}
+.frow select,.frow input[type=text]{flex:1;height:42px;padding:0 12px;background:rgba(255,255,255,.07);border:1px solid var(--border);border-radius:11px;font-size:13px;color:#fff;outline:none;transition:all .2s;font-family:'Noto Sans KR',sans-serif}
+.frow select:focus,.frow input[type=text]:focus{border-color:var(--c1);background:rgba(255,107,53,.08)}
+.frow select option{background:#1a1a35;color:#fff}
+.frow .unit{font-size:11px;color:var(--muted);min-width:16px;white-space:nowrap}
+.trow{display:flex;align-items:center;gap:10px;margin-bottom:12px;cursor:pointer;padding:4px 0}
+.trow label{font-size:13px;color:rgba(255,255,255,.85);cursor:pointer;flex:1}
+.tswitch{position:relative;width:42px;height:22px;flex-shrink:0}
+.tswitch input{opacity:0;width:0;height:0;position:absolute}
+.tslider{position:absolute;inset:0;background:rgba(255,255,255,.15);border-radius:11px;transition:.3s;cursor:pointer}
+.tslider::before{content:'';position:absolute;width:16px;height:16px;left:3px;top:3px;background:#fff;border-radius:50%;transition:.3s}
+.tswitch input:checked+.tslider{background:var(--c1)}
+.tswitch input:checked+.tslider::before{transform:translateX(20px)}
+.tabs{display:flex;gap:6px;margin-bottom:14px}
+.tab{flex:1;padding:9px 6px;text-align:center;background:rgba(255,255,255,.05);border:1px solid var(--border);border-radius:9px;cursor:pointer;font-size:12px;font-weight:500;color:var(--muted);transition:all .2s;font-family:'Noto Sans KR',sans-serif}
+.tab.on{background:rgba(255,107,53,.18);border-color:var(--c1);color:#fff}
+.sub{display:none;background:rgba(255,255,255,.03);border:1px solid var(--border);border-radius:13px;padding:14px;margin-bottom:10px;animation:fi .25s ease}
+@keyframes fi{from{opacity:0;transform:translateY(-5px)}to{opacity:1;transform:translateY(0)}}
+.ibox{background:rgba(255,165,50,.07);border:1px solid rgba(255,165,50,.2);border-radius:10px;padding:9px 13px;margin-bottom:11px;font-size:11px;color:rgba(255,200,100,.8);line-height:1.7}
+.mtrx{display:grid;grid-template-columns:repeat(2,1fr);gap:9px;margin-bottom:14px}
+.mtr{background:rgba(255,255,255,.05);border:1px solid var(--border);border-radius:12px;padding:13px 14px;position:relative;overflow:hidden}
+.mtr::after{content:'';position:absolute;top:-10px;right:-10px;width:50px;height:50px;background:radial-gradient(circle,rgba(255,107,53,.12)0%,transparent 70%);pointer-events:none}
+.mtr .ml{font-size:10px;color:var(--muted);margin-bottom:5px}
+.mtr .mv{font-size:16px;font-weight:700;color:#fff}
+.mtr .mv.orange{color:#ff8c5a}.mtr .mv.teal{color:#06d6a0}.mtr .mv.blue{color:#58c4f5}.mtr .mv.purple{color:#da77f2}
+.bd{margin-top:2px}
+.br{display:flex;justify-content:space-between;align-items:center;font-size:12px;padding:6px 0;color:rgba(255,255,255,.6);border-bottom:1px solid rgba(255,255,255,.04)}
+.br:last-child{border-bottom:none}
+.br .ll{display:flex;align-items:center;gap:5px;flex:1;margin-right:8px}
+.br .rr{white-space:nowrap;font-weight:500}
+.br.sub{padding-left:12px;color:var(--muted);font-size:11px}
+.br.total{font-size:14px;font-weight:700;color:#fff;padding:10px 0 4px;border-top:1px solid rgba(255,255,255,.13);border-bottom:none;margin-top:6px}
+.chip{display:inline-block;font-size:9px;font-weight:700;padding:2px 6px;border-radius:20px;flex-shrink:0}
+.chip.o{background:rgba(255,107,53,.2);color:#ff9562}.chip.g{background:rgba(6,214,160,.15);color:#06d6a0}
+.chip.p{background:rgba(218,119,242,.15);color:#da77f2}.chip.b{background:rgba(88,196,245,.15);color:#58c4f5}
+.tamount{background:var(--g1);color:#fff;font-size:14px;font-weight:900;padding:4px 12px;border-radius:25px;white-space:nowrap}
+.tamount.g{background:var(--g2)}
+.sdiv{font-size:10px;font-weight:700;color:var(--muted);letter-spacing:.1em;text-transform:uppercase;margin:16px 0 10px;padding-top:14px;border-top:1px solid rgba(255,255,255,.06)}
+.cmp-wrap{margin-top:18px;padding-top:18px;border-top:1px solid var(--border)}
+.cmp-title{font-size:10px;font-weight:700;color:var(--muted);letter-spacing:.1em;text-transform:uppercase;margin-bottom:12px}
+.cmp-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.cmp-card{background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:13px;padding:14px;text-align:center;position:relative}
+.cmp-card.win{background:rgba(6,214,160,.07);border-color:rgba(6,214,160,.35)}
+.best{position:absolute;top:-9px;left:50%;transform:translateX(-50%);background:var(--g4);color:#fff;font-size:9px;font-weight:700;padding:2px 10px;border-radius:20px;white-space:nowrap}
+.cmp-lbl{font-size:10px;color:var(--muted);margin-bottom:6px}
+.cmp-val{font-size:16px;font-weight:700;color:#fff;margin-bottom:4px}
+.cmp-sub{font-size:10px;color:var(--muted);line-height:1.6}
+.save-bar{background:rgba(6,214,160,.1);border:1px solid rgba(6,214,160,.25);border-radius:10px;padding:10px 14px;margin-top:10px;display:flex;justify-content:space-between;align-items:center;font-size:12px}
+.save-bar .sl{color:rgba(255,255,255,.6)}.save-bar .sr{color:#06d6a0;font-weight:700}
+.zero{text-align:center;padding:36px 16px;color:var(--muted);font-size:13px}
+.zero .ico{font-size:36px;margin-bottom:10px;display:block}
+.actions{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
+.actions.tri{grid-template-columns:repeat(3,1fr)}
+.abtn{display:flex;align-items:center;justify-content:center;gap:7px;padding:11px 8px;background:rgba(255,255,255,.05);border:1px solid var(--border);border-radius:12px;cursor:pointer;font-size:12px;font-weight:500;color:rgba(255,255,255,.7);transition:all .2s;text-decoration:none;font-family:'Noto Sans KR',sans-serif;text-align:center}
+.abtn:hover{background:rgba(255,255,255,.1);color:#fff}
+.abtn.primary{background:rgba(255,107,53,.15);border-color:rgba(255,107,53,.35);color:#ff9562}
+.abtn.consult{background:rgba(6,214,160,.1);border-color:rgba(6,214,160,.3);color:#06d6a0}
+.notice{font-size:10px;color:rgba(255,255,255,.2);line-height:1.8;margin-top:8px}
+@media print{body{background:#fff!important;color:#000!important}.bg,.actions{display:none!important}.card{background:#f9f9f9!important;border:1px solid #ddd!important;break-inside:avoid}.br{color:#333!important}.mtr{background:#f0f0f0!important}.mtr .mv{color:#000!important}.hd h1{-webkit-text-fill-color:#ff6b35!important}}
+@media(max-width:500px){
+  .wrap{padding:14px 10px 50px}.hd{padding:22px 10px 20px}.hd h1{font-size:18px}
+  .frow{flex-direction:column;align-items:stretch;gap:5px}.frow label{min-width:unset}
+  .frow select,.frow input[type=text]{width:100%}
+  .mtrx{grid-template-columns:1fr 1fr}.mtr .mv{font-size:14px}
+  .cmp-grid{grid-template-columns:1fr 1fr}
+  .actions,.actions.tri{grid-template-columns:1fr 1fr}.card{padding:16px}
+}
+</style>
+</head>
+<body>
+<div class="bg"></div>
+<div class="wrap">
+
+<div class="hd">
+  <div class="badge">🏠 부동산 세금 계산기</div>
+  <h1>@성셈의<br>종합부동산세 계산기</h1>
+  <p>2024년 기준 · 엑셀 종부세계산(세액공제제외) 시트 동일 공식 적용</p>
+</div>
+
+<div class="card">
+  <div class="ctitle"><span class="dot"></span>보유 주택 정보</div>
+  <div class="frow">
+    <label>납세자 유형</label>
+    <select id="sel-type" onchange="calc()"><option value="ind">개인</option><option value="corp">법인</option></select>
+  </div>
+  <div class="frow">
+    <label>주택 수</label>
+    <select id="sel-houses" onchange="calc()"><option value="1">1주택</option><option value="2">2주택</option><option value="3">3주택 이상</option></select>
+  </div>
+  <div class="frow">
+    <label>올해 공시가격 (원)</label>
+    <input type="text" id="inp-price" value="3,703,000,000" oninput="fmt(this);calc()">
+  </div>
+
+  <div style="margin-bottom:14px">
+    <div style="font-size:11px;color:var(--muted);margin-bottom:8px;font-weight:600;letter-spacing:0.05em">재산세 공제 계산방식 선택</div>
+    <div style="display:flex;gap:6px">
+      <button class="tab on" id="tab-hometax" onclick="setMethod('hometax')" style="flex:1;text-align:left;padding:10px 12px;height:auto">
+        <div style="font-weight:700;font-size:12px;margin-bottom:3px">🏛️ 국세청 모의계산방식</div>
+        <div style="font-size:10px;opacity:0.7;line-height:1.4">전년도 공시가 불필요<br>재산세 = 현재공시가×0.45</div>
+      </button>
+      <button class="tab" id="tab-actual" onclick="setMethod('actual')" style="flex:1;text-align:left;padding:10px 12px;height:auto">
+        <div style="font-weight:700;font-size:12px;margin-bottom:3px">📋 실제 재산세 기준</div>
+        <div style="font-size:10px;opacity:0.7;line-height:1.4">전년도 공시가 필요<br>과세표준 상한 적용</div>
+      </button>
+    </div>
+  </div>
+
+  <div id="div-prev" style="display:none">
+    <div class="frow">
+      <label>전년도 공시가격 (원)</label>
+      <input type="text" id="inp-prev" value="2,939,000,000" oninput="fmt(this);calc()">
+    </div>
+  </div>
+
+  <div class="trow" onclick="toggle1h()">
+    <div class="tswitch"><input type="checkbox" id="chk-1h"><span class="tslider"></span></div>
+    <label onclick="event.stopPropagation()">1세대 1주택자 (단독 12억 공제 / 세액공제 적용)</label>
+  </div>
+
+  <div class="sub" id="div-1h">
+    <div class="tabs">
+      <button class="tab on" id="tab-solo" onclick="setOwn('solo')">단독명의</button>
+      <button class="tab" id="tab-joint" onclick="setOwn('joint')">부부 공동명의</button>
+    </div>
+    <div class="sub" id="div-joint-in">
+      <div class="ibox">ℹ️ 공동명의는 각자 9억 공제. 재산세 = 현재공시가×0.45 기준 구간별 계산 (국세청 모의계산 방식)</div>
+      <div class="frow" style="margin-bottom:8px">
+        <label>본인 지분율 (%)</label>
+        <input type="text" id="inp-share" value="50" oninput="calc()" style="max-width:100px">
+        <span class="unit">% (배우자 <span id="sp-pct">50</span>%)</span>
+      </div>
+    </div>
+    <div class="frow" style="margin-bottom:8px">
+      <label>연령 (고령자 공제)</label>
+      <select id="sel-age" onchange="calc()">
+        <option value="0">60세 미만 (공제 없음)</option>
+        <option value="0.2">60~64세 (20%)</option>
+        <option value="0.3">65~69세 (30%)</option>
+        <option value="0.4">70세 이상 (40%)</option>
+      </select>
+    </div>
+    <div class="frow" style="margin-bottom:0">
+      <label>보유기간 (장기보유 공제)</label>
+      <select id="sel-hold" onchange="calc()">
+        <option value="0">5년 미만 (공제 없음)</option>
+        <option value="0.2">5~9년 (20%)</option>
+        <option value="0.4">10~14년 (40%)</option>
+        <option value="0.5">15년 이상 (50%)</option>
+      </select>
+    </div>
+    <div id="solo-note" style="font-size:10px;color:rgba(255,165,50,.7);margin-top:8px">※ 단독명의: 1세대1주택 12억 공제 · 고령자/장기보유 세액공제 적용</div>
+    <div id="joint-note" style="display:none;font-size:10px;color:rgba(255,165,50,.7);margin-top:8px">※ 공동명의: 각자 9억 공제 · 고령자/장기보유 세액공제 미적용 · 단독명의와 비교하려면 연령·보유기간 입력</div>
+  </div>
+</div>
+
+<div class="card g2">
+  <div class="ctitle"><span class="dot"></span>계산 결과</div>
+  <div id="result"><div class="zero"><span class="ico">🏠</span>공시가격을 입력하면 결과가 표시됩니다.</div></div>
+</div>
+
+<div class="card g3">
+  <div class="ctitle"><span class="dot"></span>추가 기능</div>
+  <div class="actions tri">
+    <button class="abtn primary" onclick="window.print()"><span>🖨️</span>인쇄하기</button>
+    <button class="abtn" onclick="saveRpt()"><span>💾</span>리포트 저장</button>
+    <button class="abtn" onclick="showEasy()"><span>📋</span>쉬운 설명</button>
+    <button class="abtn" onclick="showDecl()"><span>📄</span>신고서 보기</button>
+    <a class="abtn consult" href="https://blog.naver.com/semusatax" target="_blank" rel="noopener"><span>💬</span>세무전문가 상담</a>
+  </div>
+</div>
+
+<p class="notice">
+  ※ 재산세 공제 = D62×A/B  (D62=전체재산세×지분, A=과표×0.45×0.004, B=지분공시가×0.45 구간별재산세)<br>
+  ※ 국세청 모의계산방식: 재산세 = 현재공시가×0.45 (상한 없음, 전년도 불필요)<br>
+  ※ 실제 재산세 기준: 과표 상한 = 전년도공시가×0.45 + 당해×0.45×5%<br>
+  ※ 결정세액·농어촌특별세: 10원 미만 버림 (ROUNDDOWN -1)<br>
+  ※ 세부담 상한·합산배제 등 미반영. 실제 세액은 세무사 또는 국세청 확인 요망.
+</p>
+</div>
+
+<!-- 모달 -->
+<div id="m-easy" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:100;overflow-y:auto;padding:20px">
+  <div style="max-width:600px;margin:0 auto;background:#1a1a35;border:1px solid var(--border);border-radius:var(--r);padding:24px;position:relative">
+    <button onclick="cl('m-easy')" style="position:absolute;top:14px;right:14px;background:rgba(255,255,255,.1);border:none;color:#fff;width:30px;height:30px;border-radius:50%;cursor:pointer;font-size:16px">✕</button>
+    <div id="c-easy"></div>
+  </div>
+</div>
+<div id="m-decl" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:100;overflow-y:auto;padding:20px">
+  <div style="max-width:600px;margin:0 auto;background:#1a1a35;border:1px solid var(--border);border-radius:var(--r);padding:24px;position:relative">
+    <button onclick="cl('m-decl')" style="position:absolute;top:14px;right:14px;background:rgba(255,255,255,.1);border:none;color:#fff;width:30px;height:30px;border-radius:50%;cursor:pointer;font-size:16px">✕</button>
+    <div id="c-decl"></div>
+  </div>
+</div>
+
+<script>
+var OWN='solo', METHOD='hometax', LR=null;
+
+function fmt(el){var r=el.value.replace(/[^0-9]/g,'');el.value=r?parseInt(r).toLocaleString('ko-KR'):'';}
+function gN(id){return parseInt((document.getElementById(id).value||'').replace(/[^0-9]/g,''))||0;}
+function fn(n){return Math.floor(n).toLocaleString('ko-KR')+'원';}
+function fw(n){n=Math.round(n);if(!n)return'0원';var a=Math.abs(n),s='';if(a>=100000000){var u=Math.floor(a/100000000),m=Math.round((a%100000000)/10000);s=u+'억'+(m?' '+m.toLocaleString()+'만':'')+'원';}else if(a>=10000)s=Math.round(a/10000).toLocaleString()+'만원';else s=a.toLocaleString()+'원';return(n<0?'-':'')+s;}
+function rd10(x){return Math.floor(x/10)*10;}
+
+function jsTax(b){if(b<=0)return 0;if(b<=60000000)return b*.001;if(b<=150000000)return(b-60000000)*.0015+60000;if(b<=300000000)return(b-150000000)*.0025+195000;return(b-300000000)*.004+570000;}
+
+// 2주택 이하 세율표 (조정대상지역 2주택 포함)
+var BG=[[300000000,.005,0],[600000000,.007,600000],[1200000000,.010,2400000],[2500000000,.013,6000000],[5000000000,.015,11000000],[9400000000,.020,36000000],[Infinity,.027,101800000]];
+// 3주택 이상 세율표 (조정대상지역 2주택 제외)
+var BH=[[300000000,.005,0],[600000000,.007,600000],[1200000000,.010,2400000],[2500000000,.020,14400000],[5000000000,.030,39400000],[9400000000,.040,89400000],[Infinity,.050,183400000]];
+function jbTax(base,type,houses){
+  if(type==='corp')return{tax:base*.025,rate:.025,prog:0};
+  var t=houses>=3?BH:BG,p=0,tx=0,r=0,pg=0;
+  for(var i=0;i<t.length;i++){
+    if(base<=t[i][0]){
+      r=t[i][1]; pg=t[i][2];
+      tx=base*r-pg;  // 산출세액 = 과세표준×세율 - 누진공제
+      break;
+    }
+    p=t[i][0];
+  }
+  return{tax:tx,rate:r,prog:pg};
+}
+
+// 핵심 계산
+// 과세표준 상한 = 전년도공시가×0.45 + 당해공시가×0.45×0.05
+// 실제재산세 = jsTax(min(지분공시가×0.45, 상한))
+// 지분재산세 = 실제재산세(전체공시가기준) × 지분
+// 공제 = 지분재산세 × A/B  (A=과표×0.45×0.004, B=jsTax(지분공시가×0.45))
+function calcOne(curPub, share, prevPub, deduct, houses, type, ageR, holdR, doPersonal){
+  var pubMe=curPub*share;
+  var base=Math.max(0,(pubMe-deduct)*.6);
+  if(!base)return{pub:pubMe,deduct,base:0,taxAmt:0,rate:0,prog:0,method:METHOD,cap:0,fullJs:0,realJs:0,A:0,B:0,jd:0,afterJ:0,perR:0,perD:0,dec:0,rural:0,total:0};
+
+  var r=jbTax(base,type,houses), taxAmt=r.tax, rate=r.rate, prog=r.prog;
+
+  var fullJs, cap=0;
+  if(METHOD==='hometax'){
+    // ★ 국세청 모의계산방식 (H6=y)
+    // C62 = jsTax(전체공시가×0.45) — 상한 없음, 전년도 불필요
+    fullJs = jsTax(curPub*0.45);
+  } else {
+    // ★ 실제 재산세 기준방식 (H6=N)
+    // 과세표준 상한 = 전년도공시가×0.45 + 당해공시가×0.45×5%
+    cap = prevPub*0.45 + curPub*0.45*0.05;
+    var effBase = Math.min(curPub*0.45, cap);
+    fullJs = jsTax(effBase);
+  }
+  // 공제 공식 (방식 무관 동일): D62×A/B
+  var realJs = fullJs * share;   // D62: 지분 재산세
+  var A = base*0.45*0.004;
+  var B = jsTax(pubMe*0.45);
+  var jd = (B>0) ? realJs*A/B : 0;
+
+  var afterJ=taxAmt-jd;
+  var perR=doPersonal&&type==='ind'?Math.min(ageR+holdR,.8):0;
+  var perD=afterJ*perR;
+  var dec=rd10(afterJ-perD);
+  var rural=rd10(dec*.2);
+  return{pub:pubMe,deduct,base,taxAmt,rate,prog,method:METHOD,cap,fullJs,realJs,A,B,jd,afterJ,perR,ageR,holdR,perD,dec,rural,total:dec+rural};
+}
+
+function setMethod(m){
+  METHOD=m;
+  document.getElementById('tab-hometax').className='tab'+(m==='hometax'?' on':'');
+  document.getElementById('tab-actual').className='tab'+(m==='actual'?' on':'');
+  document.getElementById('div-prev').style.display=m==='actual'?'block':'none';
+  calc();
+}
+function toggle1h(){var c=document.getElementById('chk-1h');c.checked=!c.checked;document.getElementById('div-1h').style.display=c.checked?'block':'none';calc();}
+function setOwn(t){
+  OWN=t;
+  document.getElementById('tab-solo').className='tab'+(t==='solo'?' on':'');
+  document.getElementById('tab-joint').className='tab'+(t==='joint'?' on':'');
+  document.getElementById('div-joint-in').style.display=t==='joint'?'block':'none';
+  document.getElementById('solo-note').style.display=t==='solo'?'block':'none';
+  document.getElementById('joint-note').style.display=t==='joint'?'block':'none';
+  calc();
+}
+
+function calc(){
+  var type=document.getElementById('sel-type').value;
+  var houses=parseInt(document.getElementById('sel-houses').value);
+  var price=gN('inp-price');
+  var prev=gN('inp-prev')||price;
+  var is1h=document.getElementById('chk-1h').checked;
+  var ageR=parseFloat(document.getElementById('sel-age').value)||0;
+  var holdR=parseFloat(document.getElementById('sel-hold').value)||0;
+  var sp=Math.min(99,Math.max(1,parseFloat((document.getElementById('inp-share').value||'50').replace(/[^0-9.]/g,''))||50));
+  document.getElementById('sp-pct').textContent=Math.round(100-sp);
+  var area=document.getElementById('result');
+
+  if(!price){area.innerHTML='<div class="zero"><span class="ico">🏠</span>공시가격을 입력하면 결과가 표시됩니다.</div>';return;}
+
+  var deductSolo=is1h?1200000000:900000000;
+  var solo=calcOne(price,1,prev,deductSolo,houses,type,ageR,holdR,is1h);
+
+  if(!solo.base){
+    area.innerHTML='<div class="zero"><span class="ico">✅</span>공시가격이 기본공제액('+fw(deductSolo)+') 이하이므로<br>종합부동산세가 과세되지 않습니다.</div>';
+    return;
+  }
+
+  var joint=null;
+  if(is1h&&OWN==='joint'){
+    var sMe=sp/100;
+    var me=calcOne(price,sMe,prev,900000000,houses,type,0,0,false);
+    var jsp=calcOne(price,1-sMe,prev,900000000,houses,type,0,0,false);
+    joint={me,sp:jsp,sharePct:sp,total:me.total+jsp.total};
+  }
+
+  var prevVal=gN('inp-prev')||0;
+  LR={type,houses,price,prev:prevVal,method:METHOD,is1h,ageR,holdR,sp,solo,joint,OWN};
+
+  var html='';
+
+  // 단독명의 메트릭
+  var mBadge=solo.method==='hometax'?'🏛️ 국세청 모의계산방식':'📋 실제 재산세 기준';
+  html+='<div style="margin-bottom:10px"><span style="background:rgba(255,107,53,.15);border:1px solid rgba(255,107,53,.3);color:#ff9562;font-size:10px;font-weight:700;padding:3px 10px;border-radius:20px">'+mBadge+'</span></div>';
+  html+='<div class="mtrx">';
+  html+=mtr('과세표준',fw(solo.base));
+  html+=mtr('적용 세율',(solo.rate*100).toFixed(1)+'%','orange');
+  html+=mtr('종합부동산세',fn(solo.dec),'teal');
+  html+=mtr('농어촌특별세',fn(solo.rural),'blue');
+  html+='</div>';
+
+  // 단독명의 상세
+  html+='<div class="bd">';
+  html+=br('올해 공시가격',fn(price));
+  html+=br('기본공제 '+(is1h?'(1세대1주택 12억)':'(일반 9억)'),'- '+fn(solo.deduct));
+  html+=br('과세표준 (공정시장가액 60%)','= '+fn(solo.base));
+  var soloChip='세율 '+(solo.rate*100).toFixed(1)+'% / 누진공제 '+fn(solo.prog);
+  html+=br('산출세액',fn(solo.taxAmt),soloChip,'o');
+  var jsLabel = solo.method==='hometax' ? '전체 재산세 (공시가×0.45, 상한없음)' : '전체 재산세 (과표상한='+fw(solo.cap)+' 적용)';
+  html+=br(jsLabel,fn(solo.fullJs),'','',true);
+  html+=br('지분 재산세 (×1.0, 단독명의)',fn(solo.realJs),'','',true);
+  html+=br('A = 종부세과표×0.45×0.004',fn(solo.A),'','',true);
+  html+=br('B = 공시가×0.45 기준 구간별 재산세',fn(solo.B),'','',true);
+  html+=br('공제할 재산세 = 실제재산세×A/B','- '+fmtFloat(solo.jd),'공제','g');
+  html+=br('재산세 공제 후 세액',fn(solo.afterJ));
+  if(solo.perR>0){
+    var dd='';
+    if(solo.ageR>0) dd+='고령자 '+(solo.ageR*100).toFixed(0)+'%';
+    if(solo.holdR>0) dd+=(dd?'+':'')+'장기보유 '+(solo.holdR*100).toFixed(0)+'%';
+    html+=br('세액공제 ('+dd+' 합계 '+(solo.perR*100).toFixed(0)+'%)','- '+fn(solo.perD),'공제','p',true);
+  }
+  html+=br('종합부동산세 결정세액 (10원 미만 버림)',fn(solo.dec));
+  html+=br('농어촌특별세 (결정세액×20%, 10원 미만 버림)',fn(solo.rural),'','',true);
+  html+='<div class="br total"><span>'+(OWN==='joint'?'단독명의 합계 납부세액':'합계 납부세액')+'</span><span class="tamount">'+fn(solo.total)+'</span></div>';
+  html+='</div>';
+
+  // 공동명의
+  if(joint){
+    var jo=joint, spPct=Math.round(100-jo.sharePct);
+    html+='<div class="sdiv">📊 공동명의 (본인 '+jo.sharePct+'% / 배우자 '+spPct+'%)</div>';
+    var mBadge=solo.method==='hometax'?'🏛️ 국세청 모의계산방식':'📋 실제 재산세 기준';
+  html+='<div style="margin-bottom:10px"><span style="background:rgba(255,107,53,.15);border:1px solid rgba(255,107,53,.3);color:#ff9562;font-size:10px;font-weight:700;padding:3px 10px;border-radius:20px">'+mBadge+'</span></div>';
+  html+='<div class="mtrx">';
+    html+=mtr('본인 납부세액',fn(jo.me.total),'teal');
+    html+=mtr('배우자 납부세액',fn(jo.sp.total),'purple');
+    html+=mtr('부부 합계',fn(jo.total),'orange');
+    html+=mtr('단독 대비',(jo.total<=solo.total?'▼ ':'▲ ')+fw(Math.abs(jo.total-solo.total)),jo.total<=solo.total?'teal':'orange');
+    html+='</div>';
+
+    html+='<div class="bd">';
+    // 본인
+    html+=bsec('▶ 본인 ('+jo.sharePct+'%, 공시가 '+fn(jo.me.pub)+')','#06d6a0');
+    if(jo.me.base>0){
+      html+=br('기본공제 (9억)','- '+fn(jo.me.deduct),'','',true);
+      html+=br('과세표준 (공정시장가액 60%)',fn(jo.me.base),'','',true);
+      html+=br('산출세액',fn(jo.me.taxAmt),'세율 '+(jo.me.rate*100).toFixed(1)+'% / 누진공제 '+fn(jo.me.prog),'o',true);
+      html+=br('실제재산세 (상한 적용)',fn(jo.me.realJs),'','',true);
+      html+=br('A = 종부세과표×0.45×0.004',fn(jo.me.A),'','',true);
+      html+=br('B = 지분공시가×0.45 기준 재산세',fn(jo.me.B),'','',true);
+      html+=br('공제할 재산세 = 실제재산세×A/B','- '+fmtFloat(jo.me.jd),'공제','g',true);
+      html+=br('재산세 공제 후 세액',fn(jo.me.afterJ),'','',true);
+      html+=br('종합부동산세 결정세액 (10원 미만 버림)',fn(jo.me.dec),'','',true);
+      html+=br('농어촌특별세 (결정세액×20%)',fn(jo.me.rural),'','',true);
+      html+='<div class="br sub" style="font-weight:600;color:rgba(6,214,160,.9)"><span>본인 납부세액 합계</span><span>'+fn(jo.me.total)+'</span></div>';
+    } else {
+      html+='<div class="br sub"><span>비과세 (공시가 9억 이하)</span><span>0원</span></div>';
+    }
+    // 배우자
+    html+=bsec('▶ 배우자 ('+spPct+'%, 공시가 '+fn(jo.sp.pub)+')','#da77f2');
+    if(jo.sp.base>0){
+      html+=br('기본공제 (9억)','- '+fn(jo.sp.deduct),'','',true);
+      html+=br('과세표준 (공정시장가액 60%)',fn(jo.sp.base),'','',true);
+      html+=br('산출세액',fn(jo.sp.taxAmt),'세율 '+(jo.sp.rate*100).toFixed(1)+'% / 누진공제 '+fn(jo.sp.prog),'o',true);
+      html+=br('실제재산세 (상한 적용)',fn(jo.sp.realJs),'','',true);
+      html+=br('A = 종부세과표×0.45×0.004',fn(jo.sp.A),'','',true);
+      html+=br('B = 지분공시가×0.45 기준 재산세',fn(jo.sp.B),'','',true);
+      html+=br('공제할 재산세 = 실제재산세×A/B','- '+fmtFloat(jo.sp.jd),'공제','g',true);
+      html+=br('재산세 공제 후 세액',fn(jo.sp.afterJ),'','',true);
+      html+=br('종합부동산세 결정세액 (10원 미만 버림)',fn(jo.sp.dec),'','',true);
+      html+=br('농어촌특별세 (결정세액×20%)',fn(jo.sp.rural),'','',true);
+      html+='<div class="br sub" style="font-weight:600;color:rgba(218,119,242,.9)"><span>배우자 납부세액 합계</span><span>'+fn(jo.sp.total)+'</span></div>';
+    } else {
+      html+='<div class="br sub"><span>비과세 (공시가 9억 이하)</span><span>0원</span></div>';
+    }
+    html+='<div class="br total"><span>공동명의 부부 합계 납부세액</span><span class="tamount g">'+fn(jo.total)+'</span></div>';
+    html+='</div>';
+
+    // 비교
+    var isSW=solo.total<=jo.total,diff=Math.abs(solo.total-jo.total),better=isSW?'단독명의':'공동명의';
+    html+='<div class="cmp-wrap"><div class="cmp-title">⚖️ 단독명의 vs 공동명의 최종 비교</div>';
+    html+='<div class="cmp-grid">';
+    html+='<div class="cmp-card'+(isSW?' win':'')+'">'+(isSW?'<div class="best">✓ 유리</div>':'')+
+      '<div class="cmp-lbl">단독명의</div><div class="cmp-val">'+fn(solo.total)+'</div>'+
+      '<div class="cmp-sub">종부세 '+fn(solo.dec)+'<br>농특세 '+fn(solo.rural)+'</div></div>';
+    html+='<div class="cmp-card'+(!isSW?' win':'')+'">'+((!isSW)?'<div class="best">✓ 유리</div>':'')+
+      '<div class="cmp-lbl">공동명의 ('+jo.sharePct+':'+spPct+')</div><div class="cmp-val">'+fn(jo.total)+'</div>'+
+      '<div class="cmp-sub">본인 '+fn(jo.me.total)+'<br>배우자 '+fn(jo.sp.total)+'</div></div>';
+    html+='</div>';
+    html+=diff>0?'<div class="save-bar"><span class="sl"><b>'+better+'</b>가 <b>'+fn(diff)+'</b> 절세</span><span class="sr">↓ '+(diff/Math.max(solo.total,jo.total)*100).toFixed(1)+'%</span></div>':'<div class="save-bar"><span class="sl">단독 = 공동명의 (동일)</span><span class="sr">-</span></div>';
+    html+='</div>';
+  }
+
+  area.innerHTML=html;
+}
+
+function mtr(lbl,val,cls){return'<div class="mtr"><div class="ml">'+lbl+'</div><div class="mv'+(cls?' '+cls:'')+'">'+val+'</div></div>';}
+function br(lbl,val,chip,cls,sub){
+  var c=chip?'<span class="chip '+(cls||'o')+'">'+chip+'</span>':'';
+  return'<div class="br'+(sub?' sub':'')+'"><span class="ll">'+lbl+c+'</span><span class="rr">'+val+'</span></div>';
+}
+function bsec(txt,color){return'<div class="br" style="color:'+color+';font-weight:600;font-size:11px;'+(color==='#da77f2'?'margin-top:10px;':'')+'"><span>'+txt+'</span></div>';}
+function fmtFloat(n){return n.toLocaleString('ko-KR',{minimumFractionDigits:0,maximumFractionDigits:3})+'원';}
+function cl(id){document.getElementById(id).style.display='none';}
+
+function saveRpt(){
+  if(!LR){alert('먼저 계산을 진행해 주세요.');return;}
+  var r=LR,s=r.solo,j=r.joint;
+  var mLabel=r.method==='hometax'?'국세청 모의계산방식':'실제 재산세 기준';
+  var L=['============================================',
+    '   @성셈의 종합부동산세 계산 리포트',
+    '============================================',
+    '계산일시    : '+new Date().toLocaleString('ko-KR'),
+    '계산방식    : '+mLabel,
+    '올해 공시가  : '+fn(r.price)];
+  if(r.method==='actual'&&r.prev) L.push('전년도 공시가 : '+fn(r.prev));
+  L.push('주택 수     : '+r.houses+'주택',
+    '1세대1주택  : '+(r.is1h?'예':'아니오'),'');
+  L.push('--------------------------------------------',
+    '[ 단독명의 계산결과 ]',
+    '--------------------------------------------',
+    '과세표준    : '+fn(s.base),
+    '세율        : '+(s.rate*100).toFixed(1)+'%',
+    '산출세액    : '+fn(s.taxAmt));
+  if(r.method==='actual') L.push('재산세과표상한: '+fn(s.cap));
+  L.push('전체 재산세  : '+fn(s.fullJs),
+    '공제할재산세 : '+fmtFloat(s.jd));
+  if(s.perR>0){
+    var dd='';
+    if(s.ageR>0) dd+='고령자 '+(s.ageR*100).toFixed(0)+'%';
+    if(s.holdR>0) dd+=(dd?'+':'')+'장기보유 '+(s.holdR*100).toFixed(0)+'%';
+    L.push('세액공제('+dd+') : -'+fn(s.perD));
+  }
+  L.push('종합부동산세 : '+fn(s.dec),
+    '농어촌특별세 : '+fn(s.rural),
+    '◆ 납부세액 합계 : '+fn(s.total));
+  if(j){
+    var spPct=Math.round(100-j.sharePct);
+    L.push('','--------------------------------------------',
+      '[ 공동명의 계산결과 ('+j.sharePct+'%:'+spPct+'%) ]',
+      '--------------------------------------------',
+      '▶ 본인 ('+j.sharePct+'%, 공시가 '+fn(j.me.pub)+')',
+      '  과세표준    : '+fn(j.me.base),
+      '  산출세액    : '+fn(j.me.taxAmt),
+      '  공제할재산세 : '+fmtFloat(j.me.jd),
+      '  결정세액    : '+fn(j.me.dec),
+      '  농어촌특별세 : '+fn(j.me.rural),
+      '  ◆ 납부세액  : '+fn(j.me.total),'',
+      '▶ 배우자 ('+spPct+'%, 공시가 '+fn(j.sp.pub)+')');
+    if(j.sp.base>0){
+      L.push('  과세표준    : '+fn(j.sp.base),
+        '  산출세액    : '+fn(j.sp.taxAmt),
+        '  공제할재산세 : '+fmtFloat(j.sp.jd),
+        '  결정세액    : '+fn(j.sp.dec),
+        '  농어촌특별세 : '+fn(j.sp.rural),
+        '  ◆ 납부세액  : '+fn(j.sp.total));
+    } else { L.push('  비과세 (공시가 9억 이하)'); }
+    var diff=Math.abs(s.total-j.total);
+    L.push('','◆ 부부 합계 납부세액 : '+fn(j.total),'',
+      '--------------------------------------------',
+      '[ 단독 vs 공동명의 비교 ]',
+      '--------------------------------------------',
+      '단독명의 합계 : '+fn(s.total),
+      '공동명의 합계 : '+fn(j.total),
+      (s.total<=j.total?'→ 단독명의':'→ 공동명의')+'가 '+fn(diff)+' 절세 유리');
+  }
+  L.push('','============================================',
+    '※ 세부담 상한·합산배제 등 미반영',
+    '※ 세무전문가 상담 : https://blog.naver.com/semusatax',
+    '============================================');
+  var blob=new Blob([L.join('\n')],{type:'text/plain;charset=utf-8'});
+  var a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  var dt=new Date(),ymd=dt.getFullYear()+''+String(dt.getMonth()+1).padStart(2,'0')+''+String(dt.getDate()).padStart(2,'0');
+  a.download='종합부동산세_'+ymd+'_리포트.txt';
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  setTimeout(function(){URL.revokeObjectURL(a.href);},1000);
+}
+
+function showEasy(){
+  if(!LR){alert('먼저 계산을 진행해 주세요.');return;}
+  var r=LR,s=r.solo,j=r.joint;
+  var isJoint=r.is1h&&r.OWN==='joint'&&j;
+  var h='<h2 style="font-size:20px;font-weight:700;margin-bottom:16px;background:var(--g1);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text">📋 쉽게 보는 종합부동산세</h2>';
+
+  // ── 기본 정보 박스 ──
+  h+='<div style="background:rgba(255,107,53,.1);border:1px solid rgba(255,107,53,.3);border-radius:12px;padding:14px;margin-bottom:12px;font-size:13px;color:rgba(255,255,255,.7);line-height:1.9">';
+  h+='공시가격 <b style="color:#fff">'+fn(r.price)+'</b>의 주택을 보유하고 계십니다.<br>';
+  if(isJoint){
+    h+='1세대 1주택자 <b style="color:#ffd166">부부 공동명의</b>(본인 '+j.sharePct+'% / 배우자 '+Math.round(100-j.sharePct)+'%)로 보유 중입니다.<br>';
+    h+='공동명의는 각자 <b style="color:#ffd166">9억원</b>씩 공제됩니다.</div>';
+  } else if(r.is1h){
+    h+='1세대 1주택자 <b style="color:#ffd166">단독명의</b>로 <b style="color:#ffd166">12억원</b> 기본공제 후<br>';
+    h+='과세표준 <b style="color:#fff">'+fn(s.base)+'</b>에 세율 <b style="color:#06d6a0">'+(s.rate*100).toFixed(1)+'%</b> 적용됩니다.</div>';
+  } else {
+    h+='기본공제 <b style="color:#ffd166">9억원</b> 후 과세표준 <b style="color:#fff">'+fn(s.base)+'</b>입니다.</div>';
+  }
+
+  if(isJoint){
+    // ── 공동명의 본인 박스 ──
+    if(j.me.base>0){
+      h+='<div style="background:rgba(6,214,160,.08);border:1px solid rgba(6,214,160,.2);border-radius:12px;padding:14px;margin-bottom:10px;font-size:13px;color:rgba(255,255,255,.7);line-height:1.9">';
+      h+='<b style="color:#06d6a0">▶ 본인 ('+j.sharePct+'%, 공시가 '+fn(j.me.pub)+')</b><br>';
+      h+='과세표준 <b style="color:#fff">'+fn(j.me.base)+'</b> / 산출세액 <b style="color:#fff">'+fn(j.me.taxAmt)+'</b><br>';
+      h+='재산세 공제 <b style="color:#06d6a0">'+fn(j.me.jd)+'</b> 차감 → 결정세액 <b style="color:#fff">'+fn(j.me.dec)+'</b><br>';
+      h+='농어촌특별세 <b style="color:#58c4f5">'+fn(j.me.rural)+'</b> 포함 납부세액 <b style="color:#fff">'+fn(j.me.total)+'</b></div>';
+    }
+    // ── 공동명의 배우자 박스 ──
+    h+='<div style="background:rgba(218,119,242,.08);border:1px solid rgba(218,119,242,.2);border-radius:12px;padding:14px;margin-bottom:10px;font-size:13px;color:rgba(255,255,255,.7);line-height:1.9">';
+    h+='<b style="color:#da77f2">▶ 배우자 ('+Math.round(100-j.sharePct)+'%, 공시가 '+fn(j.sp.pub)+')</b><br>';
+    if(j.sp.base>0){
+      h+='과세표준 <b style="color:#fff">'+fn(j.sp.base)+'</b> / 산출세액 <b style="color:#fff">'+fn(j.sp.taxAmt)+'</b><br>';
+      h+='재산세 공제 <b style="color:#06d6a0">'+fn(j.sp.jd)+'</b> 차감 → 결정세액 <b style="color:#fff">'+fn(j.sp.dec)+'</b><br>';
+      h+='농어촌특별세 <b style="color:#58c4f5">'+fn(j.sp.rural)+'</b> 포함 납부세액 <b style="color:#fff">'+fn(j.sp.total)+'</b>';
+    } else {
+      h+='공시가 9억 이하 → <b style="color:#06d6a0">비과세</b> (납부세액 0원)';
+    }
+    h+='</div>';
+    // ── 공동명의 합계 박스 ──
+    h+='<div style="background:rgba(88,196,245,.15);border:1px solid rgba(88,196,245,.4);border-radius:12px;padding:16px;text-align:center;margin-bottom:12px">';
+    h+='<p style="font-size:12px;color:rgba(255,255,255,.5);margin-bottom:6px">부부 공동명의 최종 납부세액 합계</p>';
+    h+='<p style="font-size:28px;font-weight:900;color:#58c4f5">'+fn(j.total)+'</p></div>';
+  } else {
+    // ── 단독명의 계산 설명 ──
+    h+='<div style="background:rgba(6,214,160,.08);border:1px solid rgba(6,214,160,.2);border-radius:12px;padding:14px;margin-bottom:12px;font-size:13px;color:rgba(255,255,255,.7);line-height:1.9">';
+    h+='산출세액 <b style="color:#fff">'+fn(s.taxAmt)+'</b>에서 재산세 공제 <b style="color:#06d6a0">'+fn(s.jd)+'</b>를 차감합니다.';
+    if(s.perR>0) h+='<br>고령자·장기보유 세액공제 <b style="color:#da77f2">'+(s.perR*100).toFixed(0)+'%</b> = <b style="color:#fff">'+fn(s.perD)+'</b> 추가 공제됩니다.';
+    h+='</div>';
+    h+='<div style="background:rgba(255,107,53,.15);border:1px solid rgba(255,107,53,.4);border-radius:12px;padding:16px;text-align:center;margin-bottom:12px">';
+    h+='<p style="font-size:12px;color:rgba(255,255,255,.5);margin-bottom:6px">단독명의 최종 납부세액</p>';
+    h+='<p style="font-size:28px;font-weight:900;background:var(--g1);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text">'+fn(s.total)+'</p></div>';
+  }
+
+  // ── 공동명의 비교 (단독명의가 메인일 때만 추가로 표시) ──
+  if(!isJoint&&j){
+    var diff=s.total-j.total;
+    h+='<div style="background:rgba(88,196,245,.08);border:1px solid rgba(88,196,245,.2);border-radius:12px;padding:14px;font-size:13px;color:rgba(255,255,255,.7);line-height:1.9">';
+    h+='부부 공동명의('+j.sharePct+':'+(100-j.sharePct)+') 합계 <b style="color:#58c4f5">'+fn(j.total)+'</b><br>';
+    if(diff>0) h+='👍 <b style="color:#06d6a0">단독명의보다 '+fn(diff)+' 절세</b>됩니다.';
+    else if(diff<0) h+='💡 <b style="color:#ff8c5a">단독명의가 '+fn(-diff)+' 더 유리</b>합니다.';
+    else h+='단독명의와 동일합니다.';
+    h+='</div>';
+  }
+  // ── 단독명의 참고 (공동명의가 메인일 때) ──
+  if(isJoint){
+    var diff2=s.total-j.total;
+    h+='<div style="background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.1);border-radius:12px;padding:14px;font-size:12px;color:rgba(255,255,255,.5);line-height:1.8">';
+    h+='<b style="color:rgba(255,255,255,.7)">단독명의 비교</b>: 12억 공제 적용 시 납부세액 '+fn(s.total)+'<br>';
+    if(diff2>0) h+='→ 공동명의가 <b style="color:#06d6a0">'+fn(diff2)+'</b> 절세 유리';
+    else if(diff2<0) h+='→ 단독명의가 <b style="color:#ff8c5a">'+fn(-diff2)+'</b> 절세 유리';
+    else h+='→ 단독명의와 납부세액 동일';
+    h+='</div>';
+  }
+  document.getElementById('c-easy').innerHTML=h;
+  document.getElementById('m-easy').style.display='block';
+}
+
+function showDecl(){
+  if(!LR){alert('먼저 계산을 진행해 주세요.');return;}
+  var r=LR,s=r.solo,j=r.joint;
+  var isJoint=r.is1h&&r.OWN==='joint'&&j;
+  var mLabel=r.method==='hometax'?'국세청 모의계산방식':'실제 재산세 기준';
+  var h='<h2 style="font-size:18px;font-weight:700;margin-bottom:16px;color:#fff">📄 종합부동산세 신고서 (참고용)</h2>';
+  h+='<p style="font-size:11px;color:rgba(255,255,255,.4);margin-bottom:10px">재산세 계산방식: '+mLabel+'</p>';
+  function tr(a,b){return'<tr><td style="padding:8px 10px;background:rgba(255,255,255,.05);color:rgba(255,255,255,.5);border:1px solid rgba(255,255,255,.08);width:50%">'+a+'</td><td style="padding:8px 10px;color:#fff;border:1px solid rgba(255,255,255,.08);font-weight:500;text-align:right">'+b+'</td></tr>';}
+  function th(txt){return'<tr><td colspan="2" style="padding:7px 10px;background:rgba(255,107,53,.1);color:#ff9562;border:1px solid rgba(255,255,255,.08);font-weight:700;font-size:11px">'+txt+'</td></tr>';}
+
+  // ── 공통 정보 ──
+  h+='<table style="width:100%;border-collapse:collapse;font-size:12px;margin-bottom:10px">';
+  h+=th('공통 정보');
+  h+=tr('과세기준일','2024년 6월 1일');
+  h+=tr('올해 공시가격',fn(r.price));
+  if(r.method==='actual') h+=tr('전년도 공시가격',fn(r.prev));
+  h+=tr('재산세 계산방식',mLabel);
+  h+='</table>';
+
+  // ── 단독명의 ──
+  h+='<table style="width:100%;border-collapse:collapse;font-size:12px;margin-bottom:10px">';
+  h+=th('단독명의'+(isJoint?' (비교용, 12억 공제)':''));
+  h+=tr('기본공제',fn(r.is1h?1200000000:900000000));
+  h+=tr('과세표준',fn(s.base));
+  h+=tr('세율',(s.rate*100).toFixed(2)+'%');
+  h+=tr('세율 / 누진공제액',(s.rate*100).toFixed(2)+'% / '+fn(s.prog));
+  h+=tr('산출세액',fn(s.taxAmt));
+  if(r.method==='actual') h+=tr('재산세 과표 상한',fn(s.cap));
+  h+=tr('전체 재산세',fn(s.fullJs));
+  h+=tr('공제할 재산세',fmtFloat(s.jd));
+  if(s.perR>0){
+    if(s.ageR>0) h+=tr('고령자 세액공제('+Math.round(s.ageR*100)+'%)',fn(s.afterJ*s.ageR));
+    if(s.holdR>0) h+=tr('장기보유 세액공제('+Math.round(s.holdR*100)+'%)',fn(s.afterJ*s.holdR));
+  }
+  h+=tr('종합부동산세 결정세액',fn(s.dec));
+  h+=tr('농어촌특별세',fn(s.rural));
+  h+=tr('납부세액 합계','<b style="color:#ff8c5a">'+fn(s.total)+'</b>');
+  h+='</table>';
+
+  // ── 공동명의 ──
+  if(isJoint){
+    h+='<table style="width:100%;border-collapse:collapse;font-size:12px;margin-bottom:10px">';
+    h+=th('공동명의 - 본인 ('+j.sharePct+'%)');
+    h+=tr('공시가격',fn(j.me.pub));
+    h+=tr('기본공제','900,000,000원');
+    if(j.me.base>0){
+      h+=tr('과세표준',fn(j.me.base));
+      h+=tr('세율',(j.me.rate*100).toFixed(2)+'%');
+      h+=tr('산출세액',fn(j.me.taxAmt));
+      h+=tr('전체 재산세',fn(j.me.fullJs));
+      h+=tr('공제할 재산세',fmtFloat(j.me.jd));
+      h+=tr('결정세액',fn(j.me.dec));
+      h+=tr('농어촌특별세',fn(j.me.rural));
+      h+=tr('납부세액','<b style="color:#06d6a0">'+fn(j.me.total)+'</b>');
+    } else { h+=tr('과세 여부','비과세 (공시가 9억 이하)'); }
+    h+='</table>';
+
+    h+='<table style="width:100%;border-collapse:collapse;font-size:12px;margin-bottom:10px">';
+    h+=th('공동명의 - 배우자 ('+Math.round(100-j.sharePct)+'%)');
+    h+=tr('공시가격',fn(j.sp.pub));
+    h+=tr('기본공제','900,000,000원');
+    if(j.sp.base>0){
+      h+=tr('과세표준',fn(j.sp.base));
+      h+=tr('세율',(j.sp.rate*100).toFixed(2)+'%');
+      h+=tr('산출세액',fn(j.sp.taxAmt));
+      h+=tr('전체 재산세',fn(j.sp.fullJs));
+      h+=tr('공제할 재산세',fmtFloat(j.sp.jd));
+      h+=tr('결정세액',fn(j.sp.dec));
+      h+=tr('농어촌특별세',fn(j.sp.rural));
+      h+=tr('납부세액','<b style="color:#da77f2">'+fn(j.sp.total)+'</b>');
+    } else { h+=tr('과세 여부','비과세 (공시가 9억 이하)'); }
+    h+='</table>';
+
+    h+='<table style="width:100%;border-collapse:collapse;font-size:12px;margin-bottom:10px">';
+    h+=th('최종 비교');
+    h+=tr('단독명의 납부세액',fn(s.total));
+    h+=tr('공동명의 납부세액 합계','<b style="color:#58c4f5">'+fn(j.total)+'</b>');
+    var diff=s.total-j.total;
+    h+=tr('절세 효과',(diff>0?'공동명의 유리 '+fn(diff):'단독명의 유리 '+fn(-diff)));
+    h+='</table>';
+  }
+
+  h+='<table style="width:100%;border-collapse:collapse;font-size:12px;margin-bottom:10px">';
+  h+=tr('납부기한','2024년 12월 1일 ~ 12월 16일');
+  h+='</table>';
+  h+='<p style="font-size:10px;color:rgba(255,255,255,.25);margin-top:12px;line-height:1.7">※ 본 신고서는 참고용이며 실제 신고서와 다를 수 있습니다.<br>※ 정확한 신고는 홈택스(hometax.go.kr) 또는 세무사를 통해 진행하세요.</p>';
+  document.getElementById('c-decl').innerHTML=h;
+  document.getElementById('m-decl').style.display='block';
+}
+
+calc();
+</script>
+</body>
+</html>
